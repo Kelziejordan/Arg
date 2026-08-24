@@ -33,6 +33,7 @@ export class OpenAIAdapter {
     model,
     apiKey = process.env.OPENAI_API_KEY,
     baseUrl = process.env.OPENAI_BASE_URL ?? DEFAULT_BASE_URL,
+    maxOutputTokens = Number(process.env.OPENAI_MAX_OUTPUT_TOKENS ?? 128),
     fetchImpl = globalThis.fetch,
   } = {}) {
     if (!model) throw new TypeError('OpenAIAdapter model is required');
@@ -43,6 +44,7 @@ export class OpenAIAdapter {
     this.modelId = model;
     this.apiKey = apiKey;
     this.baseUrl = baseUrl.replace(/\/$/, '');
+    this.maxOutputTokens = Math.max(1, Math.min(Number(maxOutputTokens) || 128, 1024));
     this.fetchImpl = fetchImpl;
   }
 
@@ -69,6 +71,7 @@ export class OpenAIAdapter {
         body: JSON.stringify({
           model: this.modelId,
           input,
+          max_output_tokens: this.maxOutputTokens,
         }),
         signal,
       });
