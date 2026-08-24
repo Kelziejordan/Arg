@@ -13,13 +13,13 @@ function deterministicRequestId(taskId, providerId, slot) {
 }
 
 function delay(ms, signal) {
-  if (ms <= 0) return Promise.resolve(true);
+  if (ms <= 0) return Promise.resolve();
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       reject(signal.reason ?? new Error('Operation cancelled'));
       return;
     }
-    const timer = setTimeout(() => resolve(true), ms);
+    const timer = setTimeout(resolve, ms);
     signal?.addEventListener('abort', () => {
       clearTimeout(timer);
       reject(signal.reason ?? new Error('Operation cancelled'));
@@ -150,7 +150,6 @@ export function createExecutionCore({
 
       const worker = async () => {
         while (true) {
-          if (signal?.aborted) return;
           const index = cursor++;
           if (index >= providers.length) return;
 
@@ -159,8 +158,25 @@ export function createExecutionCore({
           let result;
           let attempts = 0;
 
+          if (signal?.aborted) {
+            results[index] = {
+              providerId: adapter.id,
+              status: 'cancelled',
+              latencyMs: 0,
+              timestamp: new Date().toISOString(),
+              requestId,
+              attempts: 0,
+              error: {
+                code: ERROR_CODES.CANCELLED,
+                message: 'Provider execution cancelled before start',
+                retryable: false,
+              },
+            };
+            continue;
+          }
+
           for (let attempt = 0; attempt <= configuredRetries; attempt += 1) {
-            attempts = attempt + 1;
+            attempts += 1;
             result = await executeAttempt(
               adapter,
               task,
