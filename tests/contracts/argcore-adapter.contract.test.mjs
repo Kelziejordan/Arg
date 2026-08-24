@@ -45,13 +45,12 @@ test("adapter rejects malformed input before Core execution", () => {
   );
 });
 
-test("adapter rejects a mismatched principal before execution", async () => {
+test("adapter preserves Core denial semantics for a mismatched principal", async () => {
   const input = structuredClone(validInput);
   input.principal.id = "other-principal";
-  await assert.rejects(
-    executeThroughArgCore(input),
-    /DENIED|PRINCIPAL_MISMATCH|denied/i,
-  );
+  const result = await executeThroughArgCore(input);
+  assert.equal(result.status, "DENIED");
+  assert.equal(result.outcome.reason, "PRINCIPAL_MISMATCH");
 });
 
 test("adapter preserves identity and provenance through Core", async () => {
