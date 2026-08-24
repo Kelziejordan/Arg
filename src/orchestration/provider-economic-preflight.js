@@ -1,7 +1,7 @@
 export const PROVIDER_ECONOMIC_ERRORS = Object.freeze({
   UNKNOWN_COST: 'UNKNOWN_COST',
   UNAUTHORIZED_SPEND: 'UNAUTHORIZED_SPEND',
-  FREE_QUOTA_NOT_VERIFIED: 'FREE_QUOTA_NOT_VERIFIED',
+  FREE_ENTITLEMENT_UNVERIFIED: 'FREE_ENTITLEMENT_UNVERIFIED',
 });
 
 export function createProviderEconomicPreflight({ maxSpendUsd = 0 } = {}) {
@@ -10,47 +10,49 @@ export function createProviderEconomicPreflight({ maxSpendUsd = 0 } = {}) {
   }
 
   return {
-    authorize({
+    evaluate({
       estimatedCostUsd,
       freeQuotaVerified = false,
       paidExecutionAuthorized = false,
     } = {}) {
-      if (estimatedCostUsd === undefined || estimatedCostUsd === null) {
-        const error = new Error('Execution cost is unknown');
-        error.code = PROVIDER_ECONOMIC_ERRORS.UNKNOWN_COST;
-        throw error;
-      }
-
-      if (!Number.isFinite(estimatedCostUsd) || estimatedCostUsd < 0) {
-        const error = new Error('Execution cost must be a non-negative finite number');
-        error.code = PROVIDER_ECONOMIC_ERRORS.UNKNOWN_COST;
-        throw error;
+      if (estimatedCostUsd === undefined || estimatedCostUsd === null ||
+          !Number.isFinite(estimatedCostUsd) || estimatedCostUsd < 0) {
+        return {
+          authorized: false,
+          code: PROVIDER_ECONOMIC_ERRORS.UNKNOWN_COST,
+          authorizationSource: 'none',
+          estimatedCostUsd,
+          maxSpendUsd,
+        };
       }
 
       if (estimatedCostUsd === 0 && !freeQuotaVerified && !paidExecutionAuthorized) {
-        const error = new Error('Zero cost is not authorized without verified free quota or paid authorization');
-        error.code = PROVIDER_ECONOMIC_ERRORS.FREE_QUOTA_NOT_VERIFIED;
-        throw error;
+        return {
+          authorized: false,
+          code: PROVIDER_ECONOMIC_ERRORS.FREE_ENTITLEMENT_UNVERIFIED,
+          authorizationSource: 'none',
+          estimatedCostUsd,
+          maxSpendUsd,
+        };
       }
 
       if (estimatedCostUsd > maxSpendUsd && !freeQuotaVerified && !paidExecutionAuthorized) {
-        const error = new Error('Execution exceeds authorized spend');
-        error.code = PROVIDER_ECONOMIC_ERRORS.UNAUTHORIZED_SPEND;
-        throw error;
-      }
-
-      if (estimatedCostUsd > maxSpendUsd && !paidExecutionAuthorized && !freeQuotaVerified) {
-        const error = new Error('Execution exceeds authorized spend');
-        error.code = PROVIDER_ECONOMIC_ERRORS.UNAUTHORIZED_SPEND;
-        throw error;
+        return {
+          authorized: false,
+          code: PROVIDER_ECONOMIC_ERRORS.UNAUTHORIZED_SPEND,
+          authorizationSource: 'none',
+          estimatedCostUsd,
+          maxSpendUsd,
+        };
       }
 
       return {
         authorized: true,
         estimatedCostUsd,
         maxSpendUsd,
-        freeQuotaVerified: Boolean(freeQuotaVerified),
-        paidExecutionAuthorized: Boolean(paidExecutionAuthorized),
+        authorizationSource: freeQuotaVerified
+          ? 'verified_free_quota'
+          : 'explicit_paid_authorization',
       };
     },
   };
