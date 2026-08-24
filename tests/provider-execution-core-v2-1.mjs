@@ -29,6 +29,7 @@ assert.equal(result.peerVisibility, false);
 assert.equal(result.consensusRequired, false);
 assert.equal(result.userInterfaceSlot, 5);
 assert.equal(new Set(result.results.map((r) => r.requestId)).size, 4);
+assert.ok(result.results.every((r) => r.attempts === 1));
 assert.deepEqual(result.results.map((r) => r.output), [
   'answer-1',
   'answer-2',
@@ -58,6 +59,7 @@ const partialResult = await partial.execute({ id: 'partial-fixture' });
 assert.equal(partialResult.summary.succeeded, 1);
 assert.equal(partialResult.summary.failed, 1);
 assert.equal(partialResult.results[1].status, 'error');
+assert.equal(partialResult.results[1].attempts, 1);
 
 // Retryable failures must be retried without changing the provider boundary.
 const retrying = new MockAdapter({
@@ -75,9 +77,10 @@ const retryCore = createExecutionCore({
 });
 const retryResult = await retryCore.execute({ id: 'retry-fixture' });
 assert.equal(retryResult.results[0].status, 'success');
+assert.equal(retryResult.results[0].attempts, 2);
 assert.equal(retrying.calls.length, 2);
 
-// Timeout is isolated to the provider result.
+// Timeout is isolated to the provider result and is retryable.
 const slow = createExecutionCore({
   providers: [new MockAdapter({ id: 'slow', latencyMs: 100 })],
   timeoutMs: 10,
@@ -85,6 +88,41 @@ const slow = createExecutionCore({
 const timeoutResult = await slow.execute({ id: 'timeout-fixture' });
 assert.equal(timeoutResult.results[0].status, 'timeout');
 assert.equal(timeoutResult.results[0].error.code, 'TIMEOUT');
+assert.equal(timeoutResult.results[0].attempts, 1);
+
+// Runtime concurrency is bounded independently of provider count.
+let active = 0;
+let peak = 0;
+const concurrencyProviders = [1, 2, 3].map((n) => new MockAdapter({
+  id: `bounded-${n}`,
+  latencyMs: 15,
+  output: () => {
+    active += 1;
+    peak = Math.max(peak, active);
+    return new Promise((resolve) => setTimeout(() => {
+      active -= 1;
+      resolve(`bounded-answer-${n}`);
+    }, 5));
+  },
+}));
+const bounded = createExecutionCore({
+  providers: concurrencyProviders,
+  concurrency: 2,
+  timeoutMs: 500,
+});
+const boundedResult = await bounded.execute({ id: 'concurrency-fixture' });
+assert.equal(boundedResult.summary.succeeded, 3);
+assert.ok(peak <= 2);
+
+// Invalid adapters and tasks fail at the boundary.
+assert.throws(
+  () => createExecutionCore({ providers: [{ id: 'missing-execute' }] }),
+  /must implement execute/,
+);
+await assert.rejects(
+  () => core.execute({ prompt: 'missing id' }),
+  /task must be an object with an id/,
+);
 
 // External cancellation must produce a cancellation result rather than throw.
 const controller = new AbortController();
@@ -96,5 +134,16 @@ const cancelledPromise = cancellable.execute({ id: 'cancel-fixture' }, { signal:
 setTimeout(() => controller.abort(), 5);
 const cancelled = await cancelledPromise;
 assert.equal(cancelled.results[0].status, 'cancelled');
+assert.equal(cancelled.results[0].attempts, 1);
+
+// Already-cancelled executions must not invoke providers.
+const preCancelled = new AbortController();
+preCancelled.abort();
+const preCancelProvider = new MockAdapter({ id: 'pre-cancel' });
+const preCancel = createExecutionCore({ providers: [preCancelProvider] });
+const preCancelResult = await preCancel.execute({ id: 'pre-cancel-fixture' }, { signal: preCancelled.signal });
+assert.equal(preCancelResult.results[0].status, 'cancelled');
+assert.equal(preCancelResult.results[0].attempts, 0);
+assert.equal(preCancelProvider.calls.length, 0);
 
 console.log('[GREEN] V2.1 provider execution core contract satisfied');
