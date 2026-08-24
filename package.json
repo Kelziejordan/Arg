@@ -1,0 +1,12 @@
+{
+  "name": "@kelziejordan/argos",
+  "version": "0.1.0-argos-runtime",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/contracts/*.contract.test.mjs"
+  },
+  "dependencies": {
+    "@kelziejordan/argcore": "1.0.0-argcore-004"
+  }
+}
