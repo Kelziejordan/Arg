@@ -1,3 +1,8 @@
 {
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test:v1-orchestration": "node tests/multi-llm-orchestration-red.mjs",
+    "test:v2.1": "node tests/provider-execution-core-v2-1.mjs",
+    "test:orchestration": "npm run test:v1-orchestration && npm run test:v2.1"
+  }
 }
