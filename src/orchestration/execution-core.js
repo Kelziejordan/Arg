@@ -119,20 +119,29 @@ export function createExecutionCore({
   retries = 0,
   retryDelayMs = 25,
   retryBackoff = 2,
+  economicGate,
 } = {}) {
   if (!Array.isArray(providers) || providers.length === 0) {
     throw new TypeError('providers must be a non-empty array');
   }
   providers.forEach(assertProviderAdapter);
 
+  if (economicGate !== undefined && typeof economicGate?.authorize !== 'function') {
+    throw new TypeError('economicGate must implement authorize');
+  }
+
   const limit = Math.max(1, Math.min(Number(concurrency) || 1, providers.length));
   const configuredTimeout = Math.max(1, Number(timeoutMs) || 30_000);
   const configuredRetries = Math.max(0, Number(retries) || 0);
 
   return {
-    async execute(task, { signal, concurrency: runtimeConcurrency } = {}) {
+    async execute(task, { signal, concurrency: runtimeConcurrency, estimatedCostUsd } = {}) {
       if (!task || typeof task !== 'object' || task.id == null) {
         throw new TypeError('task must be an object with an id');
+      }
+
+      if (economicGate) {
+        economicGate.authorize({ estimatedCostUsd });
       }
 
       const executionId = createHash('sha256')
