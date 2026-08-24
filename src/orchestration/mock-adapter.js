@@ -51,11 +51,18 @@ export class MockAdapter {
       throw error;
     }
 
+    const generatedOutput = typeof this.output === 'function'
+      ? this.output(task)
+      : this.output;
+    const resolvedOutput = generatedOutput && typeof generatedOutput.then === 'function'
+      ? await generatedOutput
+      : generatedOutput;
+
     return {
       providerId: this.id,
       modelId: this.modelId,
       status: 'success',
-      output: typeof this.output === 'function' ? this.output(task) : this.output,
+      output: resolvedOutput,
       latencyMs: Date.now() - startedAt,
       usage: this.usage,
       timestamp: new Date().toISOString(),
