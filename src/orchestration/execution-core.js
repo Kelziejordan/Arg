@@ -13,13 +13,13 @@ function deterministicRequestId(taskId, providerId, slot) {
 }
 
 function delay(ms, signal) {
-  if (ms <= 0) return Promise.resolve();
+  if (ms <= 0) return Promise.resolve(true);
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       reject(signal.reason ?? new Error('Operation cancelled'));
       return;
     }
-    const timer = setTimeout(resolve, ms);
+    const timer = setTimeout(() => resolve(true), ms);
     signal?.addEventListener('abort', () => {
       clearTimeout(timer);
       reject(signal.reason ?? new Error('Operation cancelled'));
@@ -157,8 +157,10 @@ export function createExecutionCore({
           const adapter = providers[index];
           const requestId = deterministicRequestId(task.id, adapter.id, index + 1);
           let result;
+          let attempts = 0;
 
           for (let attempt = 0; attempt <= configuredRetries; attempt += 1) {
+            attempts = attempt + 1;
             result = await executeAttempt(
               adapter,
               task,
@@ -170,14 +172,28 @@ export function createExecutionCore({
             if (result.status === 'success' || result.status === 'cancelled') break;
             if (!result.error?.retryable || attempt === configuredRetries) break;
 
-            await delay(retryDelayMs * (retryBackoff ** attempt), signal).catch(() => {});
-            if (signal?.aborted) break;
+            try {
+              await delay(retryDelayMs * (retryBackoff ** attempt), signal);
+            } catch {
+              result = {
+                providerId: adapter.id,
+                status: 'cancelled',
+                latencyMs: result.latencyMs,
+                timestamp: new Date().toISOString(),
+                error: {
+                  code: ERROR_CODES.CANCELLED,
+                  message: 'Provider execution cancelled during retry backoff',
+                  retryable: false,
+                },
+              };
+              break;
+            }
           }
 
           results[index] = {
             ...result,
             requestId,
-            attempts: Math.min(configuredRetries + 1, result.status === 'success' ? configuredRetries + 1 : configuredRetries + 1),
+            attempts,
           };
         }
       };
