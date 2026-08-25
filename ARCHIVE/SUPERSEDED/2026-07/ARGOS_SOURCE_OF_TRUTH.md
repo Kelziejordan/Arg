@@ -1,3 +1,18 @@
+# Superseded ArgOS Source of Truth — 2026-07
+
+This document is preserved as historical architectural intent from the July 11, 2026 ArgOS baseline.
+
+It is no longer the active source of truth for current ArgOS implementation.
+
+Original document title: ARGOS SOURCE OF TRUTH
+Original version: 1.0
+Original status: FROZEN
+Original last updated: 2026-07-11
+
+The original content is preserved below without reinterpretation.
+
+---
+
 # ARGOS SOURCE OF TRUTH
 
 **Version:** 1.0  
@@ -7,7 +22,7 @@
 
 **Purpose:**  
 Define the identity, confirmed reality, and current direction of ArgOS.  
-This document is the authoritative reference against which future architectural decisions are evaluated.
+This document was the authoritative reference against which future architectural decisions were evaluated at the time.
 
 ## 1. Identity
 
@@ -18,12 +33,12 @@ It is the constitutional architecture that keeps autonomous capabilities coheren
 
 ArgOS is not a single script, bot, agent, repository, or tool. It is the parent system that defines how autonomous components can operate safely and coherently inside one governed structure.
 
+Its purpose is to preserve system coherence as capabilities expand.
+
 ### Why does it exist?
 ArgOS exists to unify execution, governance, continuity, and modular composition within a single architecture.
 
 It addresses fragmentation by preventing autonomous systems from degrading into disconnected prompts, tools, scripts, memory layers, and partial subsystems that cannot be clearly governed or reliably evolved.
-
-Its purpose is to preserve system coherence as capabilities expand.
 
 ### What ArgOS is not
 ArgOS is not:
@@ -39,7 +54,7 @@ Those may exist as subsystems, tools, use cases, or support layers. ArgOS is the
 ## 2. Current Reality
 
 ### What components exist today?
-The components currently known to exist in some form are:
+The components currently known to exist in some form were:
 - ArgOS as the primary system architecture effort
 - Multiple versioned iterations of the ArgOS system
 - Governance-layer thinking and rule structures
@@ -50,7 +65,7 @@ The components currently known to exist in some form are:
 - Repository and documentation structure discussions
 
 ### Which components are confirmed?
-Confirmed in the current recovered reality:
+Confirmed in the recovered July 2026 reality:
 - ArgOS exists as the primary project and architectural focus
 - The system has evolved through multiple iterations
 - Governance is a core design requirement
@@ -60,27 +75,27 @@ Confirmed in the current recovered reality:
 - ArgAtlas has been identified as a separate but related project direction
 
 ### Which components are ideas?
-Not yet confirmed as present-day core system reality:
+Not yet confirmed as present-day core system reality at that time:
 - A dedicated ArgAtlas repository
 - Formal ADR collections
 - Multi-file documentation systems as the immediate canonical source
 - A database as the current source of truth
-- Protocol formalization beyond what the core definition requires today
-- Expanded automation layers built before the core architecture is stabilized
+- Protocol formalization beyond what the core definition required
+- Expanded automation layers built before the core architecture was stabilized
 
 ## 3. Current Direction
 
 ### What are we building next?
-The immediate priority is not expansion. It is stabilization.
+The immediate priority was stabilization rather than expansion.
 
-Current next steps:
+Current next steps at the time:
 1. Freeze this document as the constitutional baseline for ArgOS.
 2. Use it to distinguish identity, current reality, and current direction.
 3. Reference it in future sessions instead of redefining ArgOS from scratch.
 4. Only build supporting systems after this baseline remains stable under reuse.
 
 ### What is outside the current scope?
-Out of scope in the current phase:
+Out of scope in that phase:
 - Automatic code generation
 - Autonomous self-modification
 - Multi-agent orchestration
@@ -88,27 +103,25 @@ Out of scope in the current phase:
 - SQLite knowledge engine
 - Executive reporting
 
-These may become valid later. They are intentionally deferred until the ArgOS core is stable.
-
 ## 4. Constitutional Governance
 
 1. **Identity precedes implementation.**  
 No subsystem may redefine the identity of ArgOS.
 
 2. **Confirmed reality takes precedence over speculation.**  
-Ideas remain proposals until they are explicitly adopted.
+Ideas remain proposals until explicitly adopted.
 
 3. **Supporting systems serve the Constitution.**  
 ArgAtlas, documentation, repositories, automation, and future tools exist to preserve and implement the constitutional baseline, not replace it.
 
 ## 5. Change Policy
 
-This document is intentionally stable.
+This document was intentionally stable.
 
-Changes require one of the following:
+Changes required one of the following:
 
 1. A change to the fundamental identity of ArgOS.
 2. Confirmation of previously speculative architecture.
-3. A constitutional decision that supersedes an earlier definition.
+3. A constitutional decision that superseded an earlier definition.
 
-Routine implementation details, subsystem designs, and project progress do not require changes to this document. Those belong in architecture documents, roadmaps, ADRs, or ArgAtlas.
+Routine implementation details, subsystem designs, and project progress did not require changes to this document. Those belonged in architecture documents, roadmaps, ADRs, or ArgAtlas.

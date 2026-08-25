@@ -1,3 +1,11 @@
+# Superseded ARG Ecosystem Inventory — 2026-07
+
+Preserved as historical ecosystem/concept inventory from July 2026.
+
+This inventory is not the current architecture or roadmap source of truth.
+
+Original content:
+
 ARG Ecosystem Inventory
 Purpose
 This document is a canonical inventory of the ARG ecosystem concepts. It records what exists, what role each concept serves, what state it is in, and where it belongs.

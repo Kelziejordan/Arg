@@ -1,0 +1,25 @@
+name: Arg Orchestration CI
+
+on:
+  push:
+    branches:
+      - argos-multi-llm-red
+  pull_request:
+
+jobs:
+  orchestration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Install
+        run: npm install
+
+      - name: Verify orchestration
+        run: npm run test:all

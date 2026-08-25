@@ -1,3 +1,11 @@
+# Superseded Arg Operational State Snapshot v1 — 2026-07
+
+Preserved as historical continuity/protocol intent from July 2026.
+
+This file is not the current ArgOS source of truth.
+
+Original content:
+
 Freeze these statements now:
 State Refresh is a command, not a document type.
 Its authoritative output is an Operational State Snapshot.

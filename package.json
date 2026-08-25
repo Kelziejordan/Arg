@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "scripts": {
+    "test:v1-orchestration": "node tests/multi-llm-orchestration-red.mjs",
+    "test:v2.1": "node tests/provider-execution-core-v2-1.mjs",
+    "test:v2.2": "node tests/openai-adapter-v2-2.mjs",
+    "test:v2.3:preflight": "node tests/provider-economic-preflight-v2-3.mjs",
+    "test:v2.3:gate": "node tests/economic-gate-execution-v2-3.mjs",
+    "test:v2.3:preflight-red": "node tests/economic-preflight-v2-3-red.mjs",
+    "test:v2.3": "npm run test:v2.3:preflight && npm run test:v2.3:gate",
+    "test:v2.3:live": "LIVE_PROVIDER_TEST=1 node tests/openai-live-v2-3.mjs",
+    "test:orchestration": "npm run test:v1-orchestration && npm run test:v2.1 && npm run test:v2.2 && npm run test:v2.3",
+    "test:all": "npm run test:orchestration"
+  }
+}
