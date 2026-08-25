@@ -48,4 +48,4 @@ const zeroWithoutEntitlement = preflight.evaluate({
 assert.equal(zeroWithoutEntitlement.authorized, false);
 assert.equal(zeroWithoutEntitlement.code, 'FREE_ENTITLEMENT_UNVERIFIED');
 
-console.log('[RED] V2.3 provider economic preflight hardening requires implementation');
+console.log('[GREEN] V2.3 provider economic preflight hardening satisfied');
