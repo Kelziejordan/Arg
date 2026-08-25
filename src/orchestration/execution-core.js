@@ -67,13 +67,14 @@ async function executeAttempt(adapter, task, options, requestId, externalSignal)
     });
     return normalizeProviderResult(result, {
       providerId: adapter.id,
-      modelId: result?.modelId,
+      modelId: result?.modelId ?? adapter.modelId,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
     if (timedOut) {
       return {
         providerId: adapter.id,
+        modelId: adapter.modelId,
         status: 'timeout',
         latencyMs: Date.now() - startedAt,
         timestamp: new Date().toISOString(),
@@ -88,6 +89,7 @@ async function executeAttempt(adapter, task, options, requestId, externalSignal)
     if (externalAbort || controller.signal.aborted || isAbortError(error)) {
       return {
         providerId: adapter.id,
+        modelId: adapter.modelId,
         status: 'cancelled',
         latencyMs: Date.now() - startedAt,
         timestamp: new Date().toISOString(),
@@ -101,6 +103,7 @@ async function executeAttempt(adapter, task, options, requestId, externalSignal)
 
     return {
       providerId: adapter.id,
+      modelId: adapter.modelId,
       status: 'error',
       latencyMs: Date.now() - startedAt,
       timestamp: new Date().toISOString(),
@@ -135,13 +138,23 @@ export function createExecutionCore({
   const configuredRetries = Math.max(0, Number(retries) || 0);
 
   return {
-    async execute(task, { signal, concurrency: runtimeConcurrency, estimatedCostUsd } = {}) {
+    async execute(task, {
+      signal,
+      concurrency: runtimeConcurrency,
+      estimatedCostUsd,
+      freeQuotaVerified = false,
+      paidExecutionAuthorized = false,
+    } = {}) {
       if (!task || typeof task !== 'object' || task.id == null) {
         throw new TypeError('task must be an object with an id');
       }
 
       if (economicGate) {
-        economicGate.authorize({ estimatedCostUsd });
+        economicGate.authorize({
+          estimatedCostUsd,
+          freeQuotaVerified,
+          paidExecutionAuthorized,
+        });
       }
 
       const executionId = createHash('sha256')
@@ -170,6 +183,7 @@ export function createExecutionCore({
           if (signal?.aborted) {
             results[index] = {
               providerId: adapter.id,
+              modelId: adapter.modelId,
               status: 'cancelled',
               latencyMs: 0,
               timestamp: new Date().toISOString(),
@@ -202,6 +216,7 @@ export function createExecutionCore({
             } catch {
               result = {
                 providerId: adapter.id,
+                modelId: adapter.modelId,
                 status: 'cancelled',
                 latencyMs: result.latencyMs,
                 timestamp: new Date().toISOString(),
