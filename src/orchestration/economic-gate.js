@@ -1,6 +1,12 @@
+import {
+  createProviderEconomicPreflight,
+  PROVIDER_ECONOMIC_ERRORS,
+} from './provider-economic-preflight.js';
+
 const ECONOMIC_ERRORS = Object.freeze({
-  UNAUTHORIZED_SPEND: 'UNAUTHORIZED_SPEND',
-  UNKNOWN_COST: 'UNKNOWN_COST',
+  UNAUTHORIZED_SPEND: PROVIDER_ECONOMIC_ERRORS.UNAUTHORIZED_SPEND,
+  UNKNOWN_COST: PROVIDER_ECONOMIC_ERRORS.UNKNOWN_COST,
+  FREE_ENTITLEMENT_UNVERIFIED: PROVIDER_ECONOMIC_ERRORS.FREE_ENTITLEMENT_UNVERIFIED,
 });
 
 export function createEconomicGate({ maxSpendUsd = 0 } = {}) {
@@ -8,35 +14,33 @@ export function createEconomicGate({ maxSpendUsd = 0 } = {}) {
     throw new TypeError('maxSpendUsd must be a non-negative finite number');
   }
 
+  const preflight = createProviderEconomicPreflight({ maxSpendUsd });
+
   return {
-    authorize({ estimatedCostUsd } = {}) {
-      const base = {
-        maxSpendUsd,
+    authorize({
+      estimatedCostUsd,
+      freeQuotaVerified = false,
+      paidExecutionAuthorized = false,
+    } = {}) {
+      const decision = preflight.evaluate({
         estimatedCostUsd,
-      };
+        freeQuotaVerified,
+        paidExecutionAuthorized,
+      });
 
-      if (estimatedCostUsd === undefined || estimatedCostUsd === null) {
-        const error = new Error('Execution cost is unknown');
-        error.code = ECONOMIC_ERRORS.UNKNOWN_COST;
+      if (!decision.authorized) {
+        const messages = {
+          [ECONOMIC_ERRORS.UNKNOWN_COST]: 'Execution cost is unknown',
+          [ECONOMIC_ERRORS.UNAUTHORIZED_SPEND]: 'Execution exceeds authorized spend',
+          [ECONOMIC_ERRORS.FREE_ENTITLEMENT_UNVERIFIED]: 'Free provider entitlement is not verified',
+        };
+        const error = new Error(messages[decision.code] ?? 'Execution is not economically authorized');
+        error.code = decision.code;
+        error.retryable = false;
         throw error;
       }
 
-      if (!Number.isFinite(estimatedCostUsd) || estimatedCostUsd < 0) {
-        const error = new Error('Execution cost must be a non-negative finite number');
-        error.code = ECONOMIC_ERRORS.UNKNOWN_COST;
-        throw error;
-      }
-
-      if (estimatedCostUsd > maxSpendUsd) {
-        const error = new Error('Execution exceeds authorized spend');
-        error.code = ECONOMIC_ERRORS.UNAUTHORIZED_SPEND;
-        throw error;
-      }
-
-      return {
-        authorized: true,
-        ...base,
-      };
+      return decision;
     },
   };
 }
