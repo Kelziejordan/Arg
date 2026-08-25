@@ -23,14 +23,14 @@ const freeCore = createExecutionCore({
 
 const allowed = await freeCore.execute(
   { id: 'economic-allow-fixture' },
-  { estimatedCostUsd: 0 },
+  { estimatedCostUsd: 0, freeQuotaVerified: true },
 );
 
 assert.equal(allowed.summary.succeeded, 1);
 assert.equal(freeProvider.calls.length, 1);
 assert.equal(allowed.results[0].output, 'free-execution');
 
-const paidProvider = new MockAdapter({ id: 'paid', output: 'must-not-run' });
+const paidProvider = new MockAdapter({ id: 'paid', output: 'paid-execution' });
 const paidCore = createExecutionCore({
   providers: [paidProvider],
   economicGate: createEconomicGate({ maxSpendUsd: 0 }),
@@ -44,5 +44,12 @@ await assert.rejects(
   (error) => error?.code === 'UNAUTHORIZED_SPEND',
 );
 assert.equal(paidProvider.calls.length, 0);
+
+const authorizedPaid = await paidCore.execute(
+  { id: 'economic-paid-authorized-fixture' },
+  { estimatedCostUsd: 0.001, paidExecutionAuthorized: true },
+);
+assert.equal(authorizedPaid.summary.succeeded, 1);
+assert.equal(paidProvider.calls.length, 1);
 
 console.log('[GREEN] V2.3 economic gate execution boundary satisfied');
