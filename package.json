@@ -11,6 +11,7 @@
     "test:v2.3:live": "LIVE_PROVIDER_TEST=1 node tests/openai-live-v2-3.mjs",
     "test:orchestration": "npm run test:v1-orchestration && npm run test:v2.1 && npm run test:v2.2 && npm run test:v2.3",
     "test:data-saving": "node tests/data-saving-proving-ground.mjs",
-    "test:all": "npm run test:orchestration && npm run test:data-saving"
+    "test:data-saving:tr001": "node tests/run-data-saving-tr001.mjs",
+    "test:all": "npm run test:orchestration && npm run test:data-saving && npm run test:data-saving:tr001"
   }
 }
