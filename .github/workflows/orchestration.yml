@@ -3,6 +3,7 @@ name: Arg Orchestration CI
 on:
   push:
     branches:
+      - main
       - argos-multi-llm-red
   pull_request:
 
@@ -21,5 +22,5 @@ jobs:
       - name: Install
         run: npm install
 
-      - name: Verify orchestration
+      - name: Verify orchestration and data saving
         run: npm run test:all
