@@ -60,9 +60,17 @@ assert.equal(measurement.baselineTotalCost, 10);
 assert.equal(measurement.argosTotalCost, 4);
 assert.equal(measurement.savingsPercent, 60);
 
+const aggregate = await provingGround.measureMany([
+  { id: 'w5', payload: 'a' },
+  { id: 'w6', payload: 'b' },
+]);
+assert.equal(aggregate.aggregateSavingsPercent, 60);
+assert.equal(aggregate.integrityFailureCount, 0);
+
 console.log('DATA-SAVING PROVING GROUND: PASS');
 console.log(JSON.stringify({
   externalExecutionsAvoided: 2,
   measuredSavingsPercent: measurement.savingsPercent,
+  aggregateSavingsPercent: aggregate.aggregateSavingsPercent,
   integrityPass: measurement.integrityPass,
 }, null, 2));
